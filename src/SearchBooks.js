@@ -44,21 +44,6 @@ const SearchBooks = ({ books, UpdateBook }) => {
     };
   }, [query]);
 
-  //this function uses books api to search the query and calls
-  //set shelves function
-  const SearchBooksAPI = (query) => {
-    const search = async () => {
-      const res = await BooksAPI.search(query);
-      if (res.error) {
-        setResults([]);
-      } else {
-        let new_res = setShelves(res);
-        setResults(new_res);
-      }
-    };
-    search();
-  };
-
   //this function adds shelf field to each book in the result
   const setShelves = (res) => {
     //add shelf field to results books
