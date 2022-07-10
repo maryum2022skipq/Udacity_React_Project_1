@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import * as BooksAPI from "./BooksAPI";
 import PropTypes from "prop-types";
@@ -6,28 +6,43 @@ import DisplayBook from "./DisplayBook";
 
 const SearchBooks = ({ books, UpdateBook }) => {
   //this useState stores the input user enters
-  const [query_, setQuery] = useState("");
+  const [query, setQuery] = useState("");
   //this useState stores the results after API fetches data based on query
   const [results, setResults] = useState([]);
-
-  //this stores what data should be displayed based on query
-  const showingBooks = query_ === "" ? [] : results;
-
-  //this function is called when user writes something into the input field
-  //and calls search book api function
-  const updateQuery = (query) => {
-    if (query === "") {
-      setQuery("");
-    } else {
-      setQuery(query.trim());
-      SearchBooksAPI(query.trim());
-    }
-  };
 
   //handle book shelf change and update book shelf field
   const handleSelected = (value, book) => {
     UpdateBook(book, value);
   };
+
+  //this useEffect checks if user has input query and updates results accordingly
+  useEffect(() => {
+    let user_input = true;
+    //if anything was entered into query
+    if (query) {
+      //uses books api to search the query
+      const search = async () => {
+        const res = await BooksAPI.search(query);
+        //if api returns error as in no results found
+        if (res.error) {
+          setResults([]);
+        } else {
+          //if user still has input
+          if (user_input) {
+            //call set shelves function and set results
+            let new_res = setShelves(res);
+            setResults(new_res);
+          }
+        }
+      };
+      search();
+    }
+    //side effect clean up so when there is no data in query_
+    return () => {
+      user_input = false;
+      setResults([]);
+    };
+  }, [query]);
 
   //this function uses books api to search the query and calls
   //set shelves function
@@ -74,17 +89,17 @@ const SearchBooks = ({ books, UpdateBook }) => {
             <input
               type="text"
               placeholder="Search by title, author, or ISBN"
-              value={query_}
-              onChange={(e) => updateQuery(e.target.value)}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
             />
           </div>
         </div>
         <div className="search-books-results">
-          {showingBooks.length === 0 ? (
+          {results.length === 0 ? (
             <div></div>
           ) : (
             <ol className="books-grid">
-              {showingBooks.map((book) => (
+              {results.map((book) => (
                 <DisplayBook
                   key={book.id}
                   book={book}
